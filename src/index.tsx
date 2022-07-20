@@ -130,7 +130,7 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
 
     }
 
-    // TODO: jak je na tom výkonnost?
+    // TODO: Performance?
     function extractFieldsMember(memberKey: "value" | "touched" | "errors"): { [key in keyof T]: any } {
         let object: any = {};
 
