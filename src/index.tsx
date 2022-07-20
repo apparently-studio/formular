@@ -27,6 +27,7 @@ export interface FormControl {
     removeField: (name: string) => void
     touch: (name: string) => void
     setField: (name: string, value: any) => void
+    setFieldRef: (name: string, ref: FormElement) => void
     validate: (name: string) => void
     clearErrors: (name: string) => void
 }
@@ -45,7 +46,7 @@ function analyzeNamePath(name: string): NamePathPart[] {
 }
 
 export function createController<T = any>(name: string, control: FormControl, validators: FieldValidator[] = [], defaultValue: any = "") {
-    const { data, addField, removeField, setField, touch, validate, clearErrors } = control;
+    const { data, addField, removeField, setField, setFieldRef, touch, validate, clearErrors } = control;
 
     function change(newValue: T, validateOnChange: boolean = true) {
         setField(name, newValue);
@@ -71,6 +72,10 @@ export function createController<T = any>(name: string, control: FormControl, va
         clearErrors(name);
     }
 
+    function ref(el: FormElement) {
+        setFieldRef(name, el);
+    }
+
     onMount(() => {
         addField(name, validators, defaultValue);
         onCleanup(() => removeField(name))
@@ -81,7 +86,7 @@ export function createController<T = any>(name: string, control: FormControl, va
     const touched = createMemo(() => data[name]?.touched ?? false);
     const invalid = createMemo(() => errors().length > 0);
 
-    return { value, touched, errors, change, focus, blur, invalid, trigger, clearErrors: clearErrorsLocal };
+    return { value, ref, touched, errors, change, focus, blur, invalid, trigger, clearErrors: clearErrorsLocal };
 }
 
 export function required(message: string) {
@@ -251,6 +256,14 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         }));
     }
 
+    function setFieldRef(name: string, ref: FormElement) {
+        if (data[name] === undefined) return;
+
+        setData(produce(data => {
+            data[name].ref = ref;
+        }));
+    }
+
     function setField(name: string, value: string, updateElementValue: boolean = true) {
         if (data[name] === undefined) return;
 
@@ -300,7 +313,7 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         }
     }
 
-    const control = { data, addField, removeField, touch, validate, clearErrors, setField } as FormControl;
+    const control = { data, addField, removeField, touch, validate, clearErrors, setField, setFieldRef } as FormControl;
 
     return { handleSubmit, control, field: fieldRegister, setField, trigger: validate, clearErrors, values, isValid, touched, errors };
 }
