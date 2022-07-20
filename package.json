@@ -1,18 +1,39 @@
 {
-    "name": "formular",
-    "description": "Form library for SolidJS",
-    "authors": "Patrik Smělý (SogoCZE)",
-    "version": "0.0.1",
-    "main": "src/index.tsx",
-    "scripts": {
-        "build": "esbuild --minify src/index.tsx --outdir=dist",
-        "build:types": "tsc --emitDeclarationOnly --declaration --outdir dist"
-    },
-    "devDependencies": {
-        "esbuild": "^0.14.49",
-        "typescript": "4.7.4"
-    },
-    "peerDependencies": {
-        "solid-js": "1.4.7"
-    }
+  "name": "@apparently/formular",
+  "description": "Form library for SolidJS",
+  "authors": "Patrik Smělý (SogoCZE)",
+  "version": "0.0.1",
+  "main": "src/index.tsx",
+  "scripts": {
+    "build": "esbuild --minify src/index.tsx --outdir=dist",
+    "build:types": "tsc --emitDeclarationOnly --declaration --outdir dist"
+  },
+  "devDependencies": {
+    "esbuild": "^0.14.49",
+    "typescript": "4.7.4"
+  },
+  "peerDependencies": {
+    "solid-js": "1.4.7"
+  },
+  "dependencies": {
+    "esbuild-darwin-arm64": "^0.14.49",
+    "solid-js": "^1.4.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apparently-studio/formular.git"
+  },
+  "keywords": [
+    "SolidJS",
+    "Forms",
+    "JavaScript",
+    "TypeScript",
+    "Apparently"
+  ],
+  "author": "Apparently Studio",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apparently-studio/formular/issues"
+  },
+  "homepage": "https://github.com/apparently-studio/formular#readme"
 }
