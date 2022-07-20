@@ -1,0 +1,18 @@
+{
+    "name": "formular",
+    "description": "Form library for SolidJS",
+    "authors": "Patrik Smělý (SogoCZE)",
+    "version": "0.0.1",
+    "main": "src/index.tsx",
+    "scripts": {
+        "build": "esbuild --minify src/index.tsx --outdir=dist",
+        "build:types": "tsc --emitDeclarationOnly --declaration --outdir dist"
+    },
+    "devDependencies": {
+        "esbuild": "^0.14.49",
+        "typescript": "4.7.4"
+    },
+    "peerDependencies": {
+        "solid-js": "1.4.7"
+    }
+}
