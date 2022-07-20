@@ -3,10 +3,16 @@
   "description": "Form library for SolidJS",
   "authors": "Patrik Smělý (SogoCZE)",
   "version": "0.0.1",
-  "main": "src/index.tsx",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "esbuild --minify src/index.tsx --outdir=dist",
-    "build:types": "tsc --emitDeclarationOnly --declaration --outdir dist"
+    "build": "npm run build:js && npm run build:types",
+    "build:js": "esbuild --minify src/index.tsx --outdir=dist",
+    "build:types": "tsc"
   },
   "devDependencies": {
     "esbuild": "^0.14.49",
