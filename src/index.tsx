@@ -288,9 +288,12 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
                 value = (element as any).checked;
             }
 
-            if (initialValues?.[name] !== undefined && element) {
+            if (initialValues?.[name] !== undefined) {
                 value = initialValues[name]! as any;
-                element.value = value;
+
+                if (element) {
+                    element.value = value;
+                }
             }
 
             data[name] = { ref: element, errors: [], value, touched: false, validators, path: analyzeNamePath(name as string) };
