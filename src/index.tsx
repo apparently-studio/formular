@@ -27,7 +27,7 @@ export interface FormControl {
     removeField: (name: string) => void
     touch: (name: string) => void
     setField: (name: string, value: any) => void
-    addError: (name: string, error: string) => void
+    addError: (name: string, error: string, focus?: boolean) => void
     setFieldRef: (name: string, ref: FormElement) => void
     validate: (name: string) => void
     clearErrors: (name: string) => void
@@ -77,8 +77,8 @@ export function createController<T = any>(name: string, control: FormControl, va
         setFieldRef(name, el);
     }
 
-    function addErrorLocal(error: string) {
-        addError(name, error);
+    function addErrorLocal(error: string, focus: boolean = false) {
+        addError(name, error, focus);
     }
 
     onMount(() => {
@@ -269,12 +269,16 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         }));
     }
 
-    function addError(name: string, error: string) {
+    function addError(name: string, error: string, focus: boolean = false) {
         if (data[name] === undefined) return;
 
         setData(produce(data => {
             data[name].errors.push(error);
-        }))
+        }));
+
+        if (focus && data[name].ref) {
+            data[name].ref?.focus();
+        }
     }
 
     function setField(name: string, value: string, updateElementValue: boolean = true) {
