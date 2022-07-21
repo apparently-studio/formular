@@ -15,14 +15,14 @@
     "build:types": "tsc"
   },
   "devDependencies": {
+    "esbuild-darwin-arm64": "^0.14.49",
     "esbuild": "^0.14.49",
     "typescript": "4.7.4"
   },
   "peerDependencies": {
-    "solid-js": "1.4.7"
+    "solid-js": "^1.4.7"
   },
   "dependencies": {
-    "esbuild-darwin-arm64": "^0.14.49",
     "solid-js": "^1.4.7"
   },
   "repository": {
