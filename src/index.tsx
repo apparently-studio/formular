@@ -305,8 +305,6 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
 
             const initialValue = getValueFromObjectByPath(path, initialValues);
 
-            console.log(initialValue, initialValues);
-
             if (initialValue) {
                 value = initialValue as any;
 
