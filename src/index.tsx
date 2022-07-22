@@ -34,16 +34,36 @@ export interface FormControl {
 }
 
 function analyzeNamePath(name: string): NamePathPart[] {
-    let namePath: NamePathPart[] = [];
+    return name.split(".").map(part => ({ value: part, arrayIndex: !isNaN(Number(part)) }));
+}
 
-    for (const part of name.split(".")) {
-        namePath.push({
-            value: part,
-            arrayIndex: !isNaN(Number(part))
-        });
+function getValueFromObjectByPath(path: NamePathPart[], object: any): any | null {
+    return path.reduce((objectPart, pathPart) => objectPart?.[pathPart.arrayIndex ? Number(pathPart.value) : pathPart.value], object);
+}
+
+// TODO: simplify this?
+function createObjectFromPath(object: any, path: NamePathPart[], value: any) {
+    let last = object;
+
+    for (let i = 0; i < path.length; i++) {
+        const part = path[i];
+
+        if (!last.hasOwnProperty(part.value)) {
+            if (path[i + 1]?.arrayIndex) {
+                last[part.value] = [];
+            } else {
+                last[part.value] = {};
+            }
+        }
+
+        if (i != path.length - 1) {
+            last = last[part.value];
+            continue;
+        }
+
+        last[part.value] = value;
     }
 
-    return namePath;
 }
 
 export function createController<T = any>(name: string, control: FormControl, validators: FieldValidator[] = [], defaultValue: any = "") {
@@ -114,30 +134,6 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         }
 
         return true;
-    }
-
-    function createObjectFromPath(object: any, path: NamePathPart[], value: any) {
-        let last = object;
-
-        for (let i = 0; i < path.length; i++) {
-            const part = path[i];
-
-            if (!last.hasOwnProperty(part.value)) {
-                if (path[i + 1]?.arrayIndex) {
-                    last[part.value] = [];
-                } else {
-                    last[part.value] = {};
-                }
-            }
-
-            if (i != path.length - 1) {
-                last = last[part.value];
-                continue;
-            }
-
-            last[part.value] = value;
-        }
-
     }
 
     // TODO: Performance?
@@ -298,6 +294,8 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
     }
 
     function addField(name: string, validators: FieldValidator[], defaultValue: any, element?: FormElement) {
+        const path = analyzeNamePath(name as string);
+
         setData(produce(data => {
             let value: string = element?.value ?? defaultValue;
 
@@ -305,15 +303,19 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
                 value = (element as any).checked;
             }
 
-            if (initialValues?.[name] !== undefined) {
-                value = initialValues[name]! as any;
+            const initialValue = getValueFromObjectByPath(path, initialValues);
+
+            console.log(initialValue, initialValues);
+
+            if (initialValue) {
+                value = initialValue as any;
 
                 if (element) {
                     element.value = value;
                 }
             }
 
-            data[name] = { ref: element, errors: [], value, touched: false, validators, path: analyzeNamePath(name as string) };
+            data[name] = { ref: element, errors: [], value, touched: false, validators, path };
         }));
     }
 
