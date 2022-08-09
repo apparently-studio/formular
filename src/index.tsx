@@ -122,7 +122,32 @@ export function required(message: string) {
 }
 
 export function createForm<T extends { [name: string]: any }>(initialValues?: Partial<T>) {
-    const [data, setData] = createStore<Data>({} as any);
+    const [data, setData] = createStore<Data>(createBaseData(initialValues));
+
+    function createBaseData(data: any, path = "", names: Data = {}): Data {
+        for (const key in data) {
+            const value = data[key];
+
+            if (typeof value == "undefined" || value == null) continue;
+
+            if (typeof value === "object" || Array.isArray(value)) {
+                createBaseData(value, path + key + ".", names);
+                continue;
+            }
+
+            const name = path + key;
+
+            names[name] = {
+                value,
+                errors: [],
+                path: analyzeNamePath(name),
+                touched: false,
+                validators: [],
+            };
+        }
+
+        return names;
+    }
 
     function isFormValid(): boolean {
         for (const key in data) {
@@ -277,7 +302,7 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         }
     }
 
-    function setField(name: string, value: string, updateElementValue: boolean = true) {
+    function setField(name: string, value: any, updateElementValue: boolean = true) {
         if (data[name] === undefined) return;
 
         setData(produce(data => {
@@ -297,7 +322,16 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         const path = analyzeNamePath(name as string);
 
         setData(produce(data => {
-            let value: string = element?.value ?? defaultValue;
+            if (typeof data[name] != "undefined") {
+
+                if (element) {
+                    element.value = data[name].value;
+                }
+
+                return;
+            }
+
+            let value = element?.value ?? defaultValue;
 
             if (element?.type == "checkbox") {
                 value = (element as any).checked;
@@ -318,9 +352,9 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
     }
 
     function removeField(name: string) {
-        setData(produce(data => {
-            delete data[name];
-        }));
+        // setData(produce(data => {
+        //     delete data[name];
+        // }));
     }
 
     function handleSubmit(callback: (data: T) => void) {
