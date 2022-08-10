@@ -149,6 +149,10 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         return names;
     }
 
+    function setInitialData(initialValues: Partial<T>) {
+        setData(createBaseData(initialValues));
+    }
+
     function isFormValid(): boolean {
         for (const key in data) {
             const field = data[key];
@@ -369,5 +373,5 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
 
     const control = { data, addField, removeField, touch, validate, clearErrors, addError, setField, setFieldRef } as FormControl;
 
-    return { handleSubmit, control, field: fieldRegister, addError, setField, trigger: validate, clearErrors, values, isValid, touched, errors };
+    return { handleSubmit, control, field: fieldRegister, addError, setInitialData, setField, trigger: validate, clearErrors, values, isValid, touched, errors };
 }
