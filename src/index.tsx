@@ -1,5 +1,5 @@
-import { Accessor, createMemo, onCleanup, onMount } from "solid-js";
-import { createStore, produce } from "solid-js/store";
+import { Accessor, createMemo, onCleanup, onMount, untrack } from "solid-js";
+import { createStore, produce, unwrap } from "solid-js/store";
 
 export type FieldValidator = (value: any, values: any) => Promise<string | void>
 
@@ -10,15 +10,17 @@ interface NamePathPart {
     arrayIndex: boolean
 }
 
+type Field = {
+    path: NamePathPart[]
+    ref?: FormElement
+    value: any
+    touched: boolean
+    errors: string[]
+    validators: FieldValidator[]
+};
+
 type Data = {
-    [key: string]: {
-        path: NamePathPart[]
-        ref?: FormElement
-        value: any
-        touched: boolean
-        errors: string[]
-        validators: FieldValidator[]
-    }
+    [key: string]: Field
 };
 
 export interface FormControl {
@@ -122,22 +124,29 @@ export function required(message: string) {
 }
 
 export function createForm<T extends { [name: string]: any }>(initialValues?: Partial<T>) {
-    const [data, setData] = createStore<Data>(createBaseData(initialValues));
+    const [data, setData] = createStore<Data>(setDataFromObject(initialValues));
 
-    function createBaseData(data: any, path = "", names: Data = {}): Data {
-        for (const key in data) {
-            const value = data[key];
+    function setDataFromObject(object: any, path = "", previousData: Data = {}): Data {
+
+        for (const key in object) {
+            const value = object[key];
 
             if (typeof value == "undefined" || value == null) continue;
 
             if (typeof value === "object" || Array.isArray(value)) {
-                createBaseData(value, path + key + ".", names);
+                setDataFromObject(value, path + key + ".", previousData);
                 continue;
             }
 
             const name = path + key;
 
-            names[name] = {
+            const alreadyExistingField: Field = unwrap(data)[name];
+            if (alreadyExistingField != undefined) {
+                previousData[name] = { ...alreadyExistingField, value };
+                continue;
+            }
+
+            previousData[name] = {
                 value,
                 errors: [],
                 path: analyzeNamePath(name),
@@ -146,11 +155,7 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
             };
         }
 
-        return names;
-    }
-
-    function setInitialData(initialValues: Partial<T>) {
-        setData(createBaseData(initialValues));
+        return previousData;
     }
 
     function isFormValid(): boolean {
@@ -326,28 +331,13 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         const path = analyzeNamePath(name as string);
 
         setData(produce(data => {
+            let value = defaultValue;
+
             if (typeof data[name] != "undefined") {
+                value = data[name].value
 
                 if (element) {
                     element.value = data[name].value;
-                }
-
-                return;
-            }
-
-            let value = element?.value ?? defaultValue;
-
-            if (element?.type == "checkbox") {
-                value = (element as any).checked;
-            }
-
-            const initialValue = getValueFromObjectByPath(path, initialValues);
-
-            if (initialValue) {
-                value = initialValue as any;
-
-                if (element) {
-                    element.value = value;
                 }
             }
 
@@ -355,10 +345,14 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         }));
     }
 
+    function setValues(values: Partial<T>) {
+        setData(setDataFromObject(values));
+    }
+
     function removeField(name: string) {
-        // setData(produce(data => {
-        //     delete data[name];
-        // }));
+        setData(produce(data => {
+            delete data[name];
+        }));
     }
 
     function handleSubmit(callback: (data: T) => void) {
@@ -373,5 +367,5 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
 
     const control = { data, addField, removeField, touch, validate, clearErrors, addError, setField, setFieldRef } as FormControl;
 
-    return { handleSubmit, control, field: fieldRegister, addError, setInitialData, setField, trigger: validate, clearErrors, values, isValid, touched, errors };
+    return { handleSubmit, control, field: fieldRegister, addError, setValues, setField, trigger: validate, clearErrors, values, isValid, touched, errors };
 }
