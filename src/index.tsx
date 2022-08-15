@@ -68,6 +68,33 @@ function createObjectFromPath(object: any, path: NamePathPart[], value: any) {
 
 }
 
+export function createArrayController<T>(name: string, control: FormControl, validators: FieldValidator[] = []) {
+    const { errors, invalid, value, change } = createController<T[]>(name, control, validators, []);
+
+    function add(item: T) {
+        change([...value(), item]);
+    }
+
+    function remove(index: number) {
+        // Je filter dobré řešení? Není to pomalější jak nějaká jiná alternativa?
+        change(value().filter((_, i) => i != index));
+    }
+
+    function set(index: number, newItem: T) {
+        change(value().map((item, i) => i == index ? newItem : item));
+    }
+
+    function swap(a: number, b: number) {
+        // TODO: Tohle se dá určitě řešit lepším způsobem.
+        let newArray = value().concat();
+        newArray[a] = value()[b];
+        newArray[b] = value()[a];
+        change(newArray);
+    }
+
+    return { errors, invalid, items: value, add, set, remove, swap };
+}
+
 export function createController<T = any>(name: string, control: FormControl, validators: FieldValidator[] = [], defaultValue: any = "") {
     const { data, addField, removeField, addError, setField, setFieldRef, touch, validate, clearErrors } = control;
 
