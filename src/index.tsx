@@ -1,4 +1,4 @@
-import { Accessor, createMemo, onCleanup, onMount, untrack } from "solid-js";
+import { Accessor, createMemo, onCleanup, onMount } from "solid-js";
 import { createStore, produce, unwrap } from "solid-js/store";
 
 export type FieldValidator = (value: any, values: any) => Promise<string | void>
@@ -39,9 +39,9 @@ function analyzeNamePath(name: string): NamePathPart[] {
     return name.split(".").map(part => ({ value: part, arrayIndex: !isNaN(Number(part)) }));
 }
 
-function getValueFromObjectByPath(path: NamePathPart[], object: any): any | null {
-    return path.reduce((objectPart, pathPart) => objectPart?.[pathPart.arrayIndex ? Number(pathPart.value) : pathPart.value], object);
-}
+// function getValueFromObjectByPath(path: NamePathPart[], object: any): any | null {
+//     return path.reduce((objectPart, pathPart) => objectPart?.[pathPart.arrayIndex ? Number(pathPart.value) : pathPart.value], object);
+// }
 
 // TODO: simplify this?
 function createObjectFromPath(object: any, path: NamePathPart[], value: any) {
