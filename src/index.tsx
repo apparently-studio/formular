@@ -132,7 +132,7 @@ export function createController<T = any>(name: string, control: FormControl, va
 
     onMount(() => {
         addField(name, validators, defaultValue);
-        onCleanup(() => removeField(name))
+        // onCleanup(() => removeField(name))
     });
 
     const value = createMemo(() => data[name]?.value ?? "") as Accessor<T>;
