@@ -3,7 +3,7 @@ import { createStore, produce, unwrap } from "solid-js/store";
 
 export type FieldValidator = (value: any, values: any) => Promise<string | void>
 
-type FormElement = HTMLInputElement | HTMLSelectElement;
+type FormElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
 interface NamePathPart {
     value: string | number
@@ -150,8 +150,9 @@ export function required(message: string) {
     }
 }
 
-export function createForm<T extends { [name: string]: any }>(initialValues?: Partial<T>) {
-    const [data, setData] = createStore<Data>(setDataFromObject(initialValues));
+export function createForm<T extends { [name: string]: any }>() {
+    const [initialData, setInitialData] = createStore<Data>();
+    const [data, setData] = createStore<Data>();
 
     function setDataFromObject(object: any, path = "", previousData: Data = {}): Data {
 
@@ -172,6 +173,7 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
                 previousData[name] = { ...alreadyExistingField, value };
                 continue;
             }
+            
 
             previousData[name] = {
                 value,
@@ -197,6 +199,14 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         return true;
     }
 
+    function isFormDirty(): boolean {
+        for (const key in initialData) {
+            if(!data[key] || (data[key].value != initialData[key].value)) return true;
+        }
+
+        return false;
+    }
+
     // TODO: Performance?
     function extractFieldsMember(memberKey: "value" | "touched" | "errors"): { [key in keyof T]: any } {
         let object: any = {};
@@ -212,6 +222,7 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
     const touched = createMemo<any>(() => extractFieldsMember("touched"));
     const errors = createMemo<any>(() => extractFieldsMember("errors"));
     const isValid = createMemo(() => isFormValid());
+    const isDirty = createMemo(() => isFormDirty());
 
     function clearErrors(name?: string | string[]) {
         setData(produce(data => {
@@ -376,6 +387,11 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
         setData(setDataFromObject(values));
     }
 
+    function setInitialValues(values: Partial<T>) {
+        setData(setDataFromObject(values));
+        setInitialData(setDataFromObject(values));
+    }
+
     function removeField(name: string) {
         setData(produce(data => {
             delete data[name];
@@ -394,5 +410,5 @@ export function createForm<T extends { [name: string]: any }>(initialValues?: Pa
 
     const control = { data, addField, removeField, touch, validate, clearErrors, addError, setField, setFieldRef } as FormControl;
 
-    return { handleSubmit, control, field: fieldRegister, addError, setValues, setField, trigger: validate, clearErrors, values, isValid, touched, errors };
+    return { handleSubmit, control, field: fieldRegister, addError, setValues, setInitialValues, setField, trigger: validate, clearErrors, values, isValid, isDirty, touched, errors };
 }
