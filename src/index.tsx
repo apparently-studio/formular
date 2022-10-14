@@ -173,7 +173,7 @@ export function createForm<T extends { [name: string]: any }>() {
                 previousData[name] = { ...alreadyExistingField, value };
                 continue;
             }
-            
+
 
             previousData[name] = {
                 value,
@@ -200,8 +200,14 @@ export function createForm<T extends { [name: string]: any }>() {
     }
 
     function isFormDirty(): boolean {
-        for (const key in initialData) {
-            if(!data[key] || (data[key].value != initialData[key].value)) return true;
+        if (Object.keys(initialData).length > 0) {
+            for (const key in initialData) {
+                if (!data[key] || (data[key].value != initialData[key].value)) return true;
+            }
+        } else {
+            for (const key in data) {
+                if (data[key].value != "") return true;
+            }
         }
 
         return false;
