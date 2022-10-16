@@ -1,4 +1,4 @@
-import { Accessor, createMemo, onCleanup, onMount } from "solid-js";
+import { Accessor, createEffect, createMemo, onCleanup, onMount, on } from "solid-js";
 import { createStore, produce, unwrap } from "solid-js/store";
 
 export type FieldValidator = (value: any, values: any) => Promise<string | void>
@@ -23,12 +23,16 @@ type Data = {
     [key: string]: Field
 };
 
+type Values = {
+    [key: string]: string
+}
+
 export interface FormControl {
     data: Data
     addField: (name: string, validators: FieldValidator[], defaultValue: any, element?: FormElement) => void
     removeField: (name: string) => void
     touch: (name: string) => void
-    setField: (name: string, value: any) => void
+    setField: (name: string, value: any, updateElementValue?: boolean) => void
     addError: (name: string, error: string, focus?: boolean) => void
     setFieldRef: (name: string, ref: FormElement) => void
     validate: (name: string) => void
@@ -38,10 +42,6 @@ export interface FormControl {
 function analyzeNamePath(name: string): NamePathPart[] {
     return name.split(".").map(part => ({ value: part, arrayIndex: !isNaN(Number(part)) }));
 }
-
-// function getValueFromObjectByPath(path: NamePathPart[], object: any): any | null {
-//     return path.reduce((objectPart, pathPart) => objectPart?.[pathPart.arrayIndex ? Number(pathPart.value) : pathPart.value], object);
-// }
 
 // TODO: simplify this?
 function createObjectFromPath(object: any, path: NamePathPart[], value: any) {
@@ -98,8 +98,8 @@ export function createArrayController<T>(name: string, control: FormControl, val
 export function createController<T = any>(name: string, control: FormControl, validators: FieldValidator[] = [], defaultValue: any = "") {
     const { data, addField, removeField, addError, setField, setFieldRef, touch, validate, clearErrors } = control;
 
-    function change(newValue: T, validateOnChange: boolean = true) {
-        setField(name, newValue);
+    function change(newValue: T, validateOnChange: boolean = true, updateRefValue: boolean = true) {
+        setField(name, newValue, updateRefValue);
 
         if (validateOnChange) {
             validate(name);
@@ -151,7 +151,7 @@ export function required(message: string) {
 }
 
 export function createForm<T extends { [name: string]: any }>() {
-    const [initialData, setInitialData] = createStore<Data>();
+    const [initialData, setInitialData] = createStore<Values>();
     const [data, setData] = createStore<Data>();
 
     function setDataFromObject(object: any, path = "", previousData: Data = {}): Data {
@@ -200,9 +200,30 @@ export function createForm<T extends { [name: string]: any }>() {
     }
 
     function isFormDirty(): boolean {
-        if (Object.keys(initialData).length > 0) {
-            for (const key in initialData) {
-                if (!data[key] || (data[key].value != initialData[key].value)) return true;
+        function setValuesFromObject(object: any, path = "", previousData: Values = {}): Values {
+
+            for (const key in object) {
+                const value = object[key];
+
+                if (typeof value == "undefined" || value == null) continue;
+
+                if (typeof value === "object" || Array.isArray(value)) {
+                    setValuesFromObject(value, path + key + ".", previousData);
+                    continue;
+                }
+
+                const name = path + key;
+                previousData[name] = value;
+            }
+
+            return previousData;
+        }
+
+        const comparableData = setValuesFromObject(initialData);
+
+        if (Object.keys(comparableData).length > 0) {
+            for (const key in comparableData) {
+                if (!data[key] || (data[key].value != comparableData[key])) return true;
             }
         } else {
             for (const key in data) {
@@ -224,7 +245,7 @@ export function createForm<T extends { [name: string]: any }>() {
         return object;
     }
 
-    const values = createMemo<T>(() => extractFieldsMember("value") as any);
+    const values = createMemo<any>(() => extractFieldsMember("value") as any);
     const touched = createMemo<any>(() => extractFieldsMember("touched"));
     const errors = createMemo<any>(() => extractFieldsMember("errors"));
     const isValid = createMemo(() => isFormValid());
@@ -394,8 +415,10 @@ export function createForm<T extends { [name: string]: any }>() {
     }
 
     function setInitialValues(values: Partial<T>) {
+        const initialDirty = isDirty();
+        setInitialData(values);
+        if (initialDirty) return;
         setData(setDataFromObject(values));
-        setInitialData(setDataFromObject(values));
     }
 
     function removeField(name: string) {
@@ -414,7 +437,22 @@ export function createForm<T extends { [name: string]: any }>() {
         }
     }
 
+    function reset() {
+        if (Object.keys(initialData).length > 0) {
+            setData(setDataFromObject(initialData));
+            validate();
+            return;
+        }
+
+        for (const key in data) {
+            setData(produce(data => {
+                data[key].value = "";
+            }));
+        }
+        clearErrors();
+    }
+
     const control = { data, addField, removeField, touch, validate, clearErrors, addError, setField, setFieldRef } as FormControl;
 
-    return { handleSubmit, control, field: fieldRegister, addError, setValues, setInitialValues, setField, trigger: validate, clearErrors, values, isValid, isDirty, touched, errors };
+    return { reset, handleSubmit, control, field: fieldRegister, addError, setValues, setInitialValues, setField, trigger: validate, clearErrors, values, isValid, isDirty, touched, errors };
 }
