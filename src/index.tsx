@@ -39,6 +39,13 @@ export interface FormControl {
     clearErrors: (name: string) => void
 }
 
+export function required(message: string) {
+    return async (value: any) => {
+        if (typeof value != "number" && !value) return message;
+        if (value?.length == 0) return message;
+    }
+}
+
 function analyzeNamePath(name: string): NamePathPart[] {
     return name.split(".").map(part => ({ value: part, arrayIndex: !isNaN(Number(part)) }));
 }
