@@ -161,13 +161,6 @@ export function createController<T = any>(name: string, control: FormControl, va
     return { value, ref, touched, dirty, errors, change, focus, blur, invalid, trigger, addError: addErrorLocal, clearErrors: clearErrorsLocal };
 }
 
-export function required(message: string) {
-    return async (value: any) => {
-        if (typeof value != "number" && !value) return message;
-        if (value?.length == 0) return message;
-    }
-}
-
 export function createForm<T extends { [name: string]: any }>() {
     // TODO: nebylo by lepší na tohle využít Map?
     const [initialData, setInitialData] = createStore<{ [name: string]: any }>();
