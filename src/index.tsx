@@ -186,7 +186,7 @@ export function createForm<T extends { [name: string]: any }>() {
     }
 
     function isFieldDirty(name: string): boolean {
-        if (data[name] === undefined) {
+        if (!data.hasOwnProperty(name)) {
             return false;
         }
 
@@ -284,7 +284,7 @@ export function createForm<T extends { [name: string]: any }>() {
             return await multiple(name, focusOnError);
         }
 
-        if (data[name] == undefined) return false;
+        if (!data.hasOwnProperty(name)) return false;
 
         const validators = data[name].validators;
 
@@ -347,7 +347,7 @@ export function createForm<T extends { [name: string]: any }>() {
     }
 
     function setField(name: string, value: any, updateElementValue: boolean = true) {
-        if (data[name] === undefined) return;
+        if (!data.hasOwnProperty(name)) return;
 
         batch(() => {
             setData(name, "value", value);
