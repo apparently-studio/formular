@@ -2,7 +2,7 @@
   "name": "@apparently/formular",
   "description": "Form library for SolidJS",
   "authors": "Patrik Smělý (SogoCZE)",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,7 +23,8 @@
     "solid-js": "^1.4.7"
   },
   "dependencies": {
-    "solid-js": "^1.4.7"
+    "solid-js": "^1.6.0",
+    "stable-hash": "^0.0.2"
   },
   "repository": {
     "type": "git",
