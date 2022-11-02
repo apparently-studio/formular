@@ -340,7 +340,6 @@ export function createForm<T extends { [name: string]: any }>() {
     }
 
     function setFieldRef(name: string, ref: FormElement) {
-        console.log("setting ref for", name, ref, data[name]);
         if (!data.hasOwnProperty(name)) return;
         setData(name, "ref", ref);
     }
