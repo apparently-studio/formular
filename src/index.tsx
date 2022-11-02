@@ -36,6 +36,7 @@ export interface FormControl {
     addError: (name: string, error: string, focus?: boolean) => void
     setFieldRef: (name: string, ref: FormElement) => void
     validate: (name: string) => void
+    focus: (name: string) => void
     clearErrors: (name: string) => void
 }
 
@@ -120,7 +121,9 @@ export function createArrayController<T>(name: string, control: FormControl, val
 }
 
 export function createController<T = any>(name: string, control: FormControl, validators: FieldValidator[] = [], defaultValue: any = "") {
-    const { data, addField, removeField, isFieldDirty, addError, setField, setFieldRef, touch, validate, clearErrors } = control;
+    const { data, addField, focus: focusControl, isFieldDirty, addError, setField, setFieldRef, touch, validate, clearErrors } = control;
+
+    addField(name, validators, defaultValue);
 
     function change(newValue: T, validateOnChange: boolean = true, updateRefValue: boolean = true) {
         setField(name, newValue, updateRefValue);
@@ -131,10 +134,14 @@ export function createController<T = any>(name: string, control: FormControl, va
     }
 
     function focus() {
+        focusControl(name);
+    }
+
+    function onFocus() {
         touch(name);
     }
 
-    function blur() {
+    function onBlur() {
         validate(name);
     }
 
@@ -154,18 +161,13 @@ export function createController<T = any>(name: string, control: FormControl, va
         addError(name, error, focus);
     }
 
-    onMount(() => {
-        addField(name, validators, defaultValue);
-        // onCleanup(() => removeField(name))
-    });
-
     const value = createMemo(() => data[name]?.value ?? "") as Accessor<T>;
     const errors = createMemo(() => data[name]?.errors ?? []);
     const touched = createMemo(() => data[name]?.touched ?? false);
     const dirty = createMemo(() => isFieldDirty(name));
     const invalid = createMemo(() => errors().length > 0);
 
-    return { value, ref, touched, dirty, errors, change, focus, blur, invalid, trigger, addError: addErrorLocal, clearErrors: clearErrorsLocal };
+    return { value, ref, touched, dirty, errors, change, onFocus, onBlur, focus, invalid, trigger, addError: addErrorLocal, clearErrors: clearErrorsLocal };
 }
 
 export function createForm<T extends { [name: string]: any }>() {
@@ -332,7 +334,13 @@ export function createForm<T extends { [name: string]: any }>() {
         setData(name, "touched", true);
     }
 
+    function focus(name: string) {
+        if (!data.hasOwnProperty(name)) return;
+        data[name].ref?.focus();
+    }
+
     function setFieldRef(name: string, ref: FormElement) {
+        console.log("setting ref for", name, ref, data[name]);
         if (!data.hasOwnProperty(name)) return;
         setData(name, "ref", ref);
     }
@@ -437,7 +445,7 @@ export function createForm<T extends { [name: string]: any }>() {
         clearErrors();
     }
 
-    const control = { data, addField, isFieldDirty, removeField, touch, validate, clearErrors, addError, setField, setFieldRef } as FormControl;
+    const control = { data, addField, focus, isFieldDirty, removeField, touch, validate, clearErrors, addError, setField, setFieldRef } as FormControl;
 
-    return { reset, handleSubmit, control, field: fieldRegister, addError, setValues, setInitialValues, setField, trigger: validate, clearErrors, values, isValid, isDirty, touched, dirty, errors };
+    return { reset, handleSubmit, control, focus, field: fieldRegister, addError, setValues, setInitialValues, setField, trigger: validate, clearErrors, values, isValid, isDirty, touched, dirty, errors };
 }
