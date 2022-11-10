@@ -76,18 +76,27 @@ function createObjectFromPath(object: any, path: NamePathPart[], value: any) {
 
 }
 
+export function FinalValue<T>(data: T) {
+    return () => data;
+}
+
 function createKeyValueFromObject<T>(object: any, setKey: (name: string, value: unknown) => void, path = "") {
     for (const key in object) {
         const value = object[key];
 
         if (typeof value == "undefined" || value == null) continue;
 
-        if (typeof value === "object" || Array.isArray(value)) {
+        if ((typeof value === "object" || Array.isArray(value)) && typeof value != "function") {
             createKeyValueFromObject(value, setKey, path + key + ".");
             continue;
         }
 
         const name = path + key;
+
+        if (typeof value == "function") {
+            setKey(name, value());
+            return;
+        }
 
         setKey(name, value);
     }
@@ -172,8 +181,8 @@ export function createController<T = any>(name: string, control: FormControl, va
 
 export function createForm<T extends { [name: string]: any }>() {
     // TODO: nebylo by lepší na tohle využít Map?
-    const [initialData, setInitialData] = createStore<{ [name: string]: any }>();
-    const [data, setData] = createStore<Data>();
+    const [initialData, setInitialData] = createStore<{ [name: string]: any }>({});
+    const [data, setData] = createStore<Data>({});
 
     function isFormValid(): boolean {
         for (const key in data) {
@@ -371,7 +380,7 @@ export function createForm<T extends { [name: string]: any }>() {
 
         let value = defaultValue;
 
-        if (typeof data[name] != "undefined") {
+        if (data?.hasOwnProperty(name)) {
             value = data[name].value
 
             if (element) {
