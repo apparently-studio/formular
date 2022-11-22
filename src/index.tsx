@@ -114,8 +114,12 @@ export function createArrayController<T>(name: string, control: FormControl, val
         change(value().filter((_, i) => i != index));
     }
 
-    function set(index: number, newItem: T) {
+    function update(index: number, newItem: T) {
         change(value().map((item, i) => i == index ? newItem : item));
+    }
+
+    function set(items: T[]) {
+        change(items);
     }
 
     function swap(a: number, b: number) {
@@ -126,7 +130,7 @@ export function createArrayController<T>(name: string, control: FormControl, val
         change(newArray);
     }
 
-    return { errors, invalid, items: value, add, set, remove, swap };
+    return { errors, invalid, items: value, add, update, set, remove, swap };
 }
 
 export function createController<T = any>(name: string, control: FormControl, validators: FieldValidator[] = [], defaultValue: any = "") {
