@@ -95,7 +95,7 @@ function createKeyValueFromObject<T>(object: any, setKey: (name: string, value: 
 
         if (typeof value == "function") {
             setKey(name, value());
-            return;
+            continue;
         }
 
         setKey(name, value);
