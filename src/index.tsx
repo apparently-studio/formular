@@ -227,6 +227,7 @@ export function createForm<T extends { [name: string]: any }>() {
     const isDirty = createMemo(() => {
         for (const value of Object.values(dirty())) {
             if (value) {
+                console.log(dirty());
                 return true;
             }
         }
@@ -390,6 +391,10 @@ export function createForm<T extends { [name: string]: any }>() {
             if (element) {
                 element.value = data[name].value;
             }
+        }
+
+        if (defaultValue) {
+            setInitialData({ [name]: defaultValue });
         }
 
         setData(name, { ref: element, errors: [], value, touched: false, validators, path })
